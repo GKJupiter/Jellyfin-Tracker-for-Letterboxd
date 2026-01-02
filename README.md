@@ -9,6 +9,15 @@ This script acts as a "middleware." When you watch a movie on Jellyfin and reach
 3. Searches for the movie (using Title + Production Year for accuracy).
 4. Marks the movie as "Watched."
 
+## 🚀 Installation & Setup
+
+### 1. Install Dependencies
+Open your terminal in the project folder and run:
+```bash
+pip install -r requirements.txt
+playwright install chromium
+```
+
 ## ⚙️ Configuration
 Before running, you must create a `.env` file to include your credentials:
 
@@ -25,35 +34,29 @@ WATCH_THRESHOLD=85
    * **`your_letterboxd_password`**: Your Letterboxd password.
 4. Save as `.env`. (Ensure `save as type` is `All files`)
 
-## 🚀 Installation & Setup
 
-### 1. Install Dependencies
-Open your terminal in the project folder and run:
-```bash
-pip install -r requirements.txt
-playwright install chromium
-```
+### 2. Configure Jellyfin
 
-### 2. Run the Tracker
+  Go to your Jellyfin Dashboard -> Webhooks (Webhooks is an extension you need to download).
+
+  Click Add Generic Destination.
+
+  Webhook Name: Letterboxd Tracker (or anything you want it doesn't matter)
+
+  Webhook URL: `http://localhost:5000/webhook` (If you are using this app on another device change `localhost` to that device's IPv4 address)
+
+  Notification Type: Check "Playback Progress".
+
+  Item Type: Check "Movies".
+
+  Send All Properties: Check this box.
+
+  Save.
+
+
+    
+### 3. Run the Tracker
 In your terminal, run the following command to start the server:
 ```bash
 python main.py
 ```
-
-3. Configure Jellyfin
-
-    Go to your Jellyfin Dashboard -> Webhooks (Webhooks is an extension you need to download).
-
-    Click Add Generic Destination.
-
-    Webhook Name: Tracker
-
-    Webhook URL: `http://localhost:5000/webhook` (If you are using this app on another device change `localhost` to that device's IPv4 address)
-
-    Notification Type: Check "Playback Progress".
-
-    Item Type: Check "Movies".
-
-    Send All Properties: Check this box.
-
-    Save.
