@@ -42,7 +42,7 @@ python main.py
 
     Webhook Name: Tracker
 
-    Webhook URL: http://localhost:5000/webhook
+    Webhook URL: `http://localhost:5000/webhook`
 
     Notification Type: Check "Playback Progress".
 
