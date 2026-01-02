@@ -99,7 +99,7 @@ async def receive_jellyfin_data(request: Request):
     try:
         data = await request.json()
         item_name = data.get("Name")
-        production_year = data.get("ProductionYear")
+        production_year = data.get("Year")
         user_name = data.get("NotificationUsername")
         current_ticks = data.get("PlaybackPositionTicks", 0)
         total_ticks = data.get("RunTimeTicks", 1) 
