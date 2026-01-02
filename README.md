@@ -19,7 +19,7 @@ playwright install chromium
 ```
 
 ## ⚙️ Configuration
-Before running, you must create a `.env` file to include your credentials:
+Before running `main.py`, you must create a `.env` file to include your credentials:
 
 1. Create new `.txt` file.
 2. Paste this:
@@ -47,9 +47,9 @@ WATCH_THRESHOLD=85
 
   Notification Type: Check "Playback Progress".
 
-  Item Type: Check "Movies".
+  Item Type: Check `Movies`.
 
-  Send All Properties: Check this box.
+  Check `Send All Properties (ignores templates)`.
 
   Save.
 
