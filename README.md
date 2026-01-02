@@ -3,7 +3,7 @@
 Automatically sync your Jellyfin movie watch status to Letterboxd using Python and Playwright.
 
 ## 📋 How it Works
-This script acts as a "middleware." When you watch a movie on Jellyfin and reach your defined progress threshold (e.g., 85%), Jellyfin sends a webhook to this script. The script then:
+This script acts as a "middleware." When you watch a movie on Jellyfin and reach your defined progress threshold (e.g. 85%), Jellyfin sends a webhook to this script. The script then:
 1. Launches a background (headless) browser.
 2. Logs into your Letterboxd account.
 3. Searches for the movie (using Title + Production Year for accuracy).
