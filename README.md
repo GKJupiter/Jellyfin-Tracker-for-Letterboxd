@@ -10,14 +10,20 @@ This script acts as a "middleware." When you watch a movie on Jellyfin and reach
 4. Marks the movie as "Watched."
 
 ## ⚙️ Configuration
-Before running, you must edit the `main.py` file to include your credentials:
+Before running, you must create a `.env` file to include your credentials:
 
-1. Open `main.py`.
-2. Locate the `CONFIGURATION` block (Lines 11-16).
+1. Create new `.txt` file.
+2. Paste this:
+```bash
+LB_USER=your_letterboxd_username
+LB_PASS=your_letterboxd_password
+WATCH_THRESHOLD=85
+```
 3. Update the following values:
    * **`WATCH_THRESHOLD`**: The percentage of the movie you must watch to trigger the log (Default is `85`).
-   * **`LETTERBOXD_USER`**: Your Letterboxd username.
-   * **`LETTERBOXD_PASS`**: Your Letterboxd password.
+   * **`your_letterboxd_username`**: Your Letterboxd username.
+   * **`your_letterboxd_password`**: Your Letterboxd password.
+4. Save as `.env`. (Ensure `save as type` is `All files`)
 
 ## 🚀 Installation & Setup
 
@@ -42,7 +48,7 @@ python main.py
 
     Webhook Name: Tracker
 
-    Webhook URL: `http://localhost:5000/webhook`
+    Webhook URL: `http://localhost:5000/webhook` (If you are using this app on another device change `localhost` to that device's IPv4 address)
 
     Notification Type: Check "Playback Progress".
 
