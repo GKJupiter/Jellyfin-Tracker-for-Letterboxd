@@ -36,10 +36,18 @@ python main.py
 
 3. Configure Jellyfin
 
-    Go to your Jellyfin Dashboard -> Webhooks.
+    Go to your Jellyfin Dashboard -> Webhooks (Webhooks is an extension you need to download).
 
-    Add a new Generic Destination Webhook.
+    Click Add Generic Destination.
 
-    Set the Server URL to: `http://localhost:5000/webhook`.
+    Webhook Name: Tracker
 
-    Select Playback Progress as the trigger event.
+    Webhook URL: http://localhost:5000/webhook
+
+    Notification Type: Check "Playback Progress".
+
+    Item Type: Check "Movies".
+
+    Send All Properties: Check this box.
+
+    Save.
