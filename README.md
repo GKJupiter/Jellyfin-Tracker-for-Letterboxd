@@ -19,20 +19,15 @@ playwright install chromium
 ```
 
 ## ⚙️ Configuration
-Before running `main.py`, you must create a `.env` file to include your credentials:
+Before running `main.py`, you must edit `configuration.json` file to include your credentials:
 
-1. Create new `.txt` file.
-2. Paste this:
-```bash
-LB_USER=your_letterboxd_username
-LB_PASS=your_letterboxd_password
-WATCH_THRESHOLD=85
-```
-3. Update the following values:
-   * **`WATCH_THRESHOLD`**: The percentage of the movie you must watch to trigger the log (Default is `85`).
+1. Open `configuration.json` file.
+2. Update the following values:
+   * **`watch_threshold`**: The percentage of the movie you must watch to trigger the log (Default is `85`).
+   * **`JellyfinUser1`**: Your Jellyfin profile name.
    * **`your_letterboxd_username`**: Your Letterboxd username.
    * **`your_letterboxd_password`**: Your Letterboxd password.
-4. Save as `.env`. (Ensure `save as type` is `All files`)
+4. Save
 
 
 ### 2. Configure Jellyfin
