@@ -1,0 +1,13 @@
+{
+    "watch_threshold": 85,
+    "users": {
+        "JellyfinUser1": {
+            "lb_user": "LETTERBOXD_USER1",
+            "lb_pass": "LETTERBOXD_PASS1"
+        },
+        "JellyfinUser2": {
+            "lb_user": "LETTERBOXD_USER2",
+            "lb_pass": "LETTERBOXD_PASS2"
+        }
+    }
+}
