@@ -2,6 +2,8 @@ import uvicorn
 import urllib.parse
 import asyncio
 import json
+import os
+import sys
 from fastapi import FastAPI, Request
 from playwright.async_api import async_playwright
 
@@ -18,12 +20,21 @@ browser_lock = asyncio.Lock()
 handled_movies = set()
 
 def load_user_map():
-    """Reads the users.json file to get credentials."""
+    # Get the folder where main.py is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, "users.json")
+    
+    print(f"📂 Debug: Looking for config at: {file_path}")
+
     try:
-        with open("users.json", "r") as f:
+        with open(file_path, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print("❌ ERROR: users.json not found! Please create it.")
+        print(f"❌ ERROR: users.json NOT found at {file_path}")
+        print("👉 Make sure the file is in that specific folder!")
+        return {}
+    except json.JSONDecodeError:
+        print(f"❌ ERROR: users.json is found but has bad grammar (syntax error).")
         return {}
 
 async def mark_on_letterboxd(movie_name, movie_year, lb_user, lb_pass):
