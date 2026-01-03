@@ -3,38 +3,27 @@ import urllib.parse
 import asyncio
 import json
 import os
-import sys
 from fastapi import FastAPI, Request
 from playwright.async_api import async_playwright
 
 app = FastAPI()
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
-WATCH_THRESHOLD = 85  # Change this number here to adjust sensitivity
-# ==========================================
-
 # Global lock: Only one browser session at a time
 browser_lock = asyncio.Lock()
 handled_movies = set()
 
-def load_user_map():
-    # Get the folder where main.py is located
+def load_configuration():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, "users.json")
+    file_path = os.path.join(script_dir, "configuration.json")
     
-    print(f"📂 Debug: Looking for config at: {file_path}")
-
     try:
         with open(file_path, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"❌ ERROR: users.json NOT found at {file_path}")
-        print("👉 Make sure the file is in that specific folder!")
+        print(f"❌ ERROR: configuration.json NOT found at {file_path}")
         return {}
     except json.JSONDecodeError:
-        print(f"❌ ERROR: users.json is found but has bad grammar (syntax error).")
+        print(f"❌ ERROR: configuration.json has bad grammar (syntax error).")
         return {}
 
 async def mark_on_letterboxd(movie_name, movie_year, lb_user, lb_pass):
@@ -122,13 +111,17 @@ async def receive_jellyfin_data(request: Request):
         session_id = f"{jellyfin_user}_{item_name}"
         percent = (current_ticks / total_ticks) * 100 if total_ticks > 0 else 0
 
-        if percent >= WATCH_THRESHOLD:
+        # --- DYNAMIC CONFIG LOADING ---
+        config = load_configuration()
+        threshold = config.get("watch_threshold", 85) # Default to 85 if missing
+        users_map = config.get("users", {})
+
+        if percent >= threshold:
             if session_id not in handled_movies:
-                user_map = load_user_map()
                 
-                if jellyfin_user in user_map:
+                if jellyfin_user in users_map:
                     print(f"🚀 TARGET REACHED: {item_name} (User: {jellyfin_user})")
-                    creds = user_map[jellyfin_user]
+                    creds = users_map[jellyfin_user]
                     handled_movies.add(session_id)
                     asyncio.create_task(mark_on_letterboxd(
                         item_name, 
@@ -151,5 +144,8 @@ async def receive_jellyfin_data(request: Request):
         return {"status": "error"}
 
 if __name__ == "__main__":
-    print(f"Tracker Active. Multi-User Mode. Threshold: {WATCH_THRESHOLD}%")
+    # Just for startup display, we load config once
+    start_config = load_configuration()
+    start_threshold = start_config.get("watch_threshold", 85)
+    print(f"Tracker Active. Loading 'configuration.json'. Threshold: {start_threshold}%")
     uvicorn.run(app, host="0.0.0.0", port=5000)
