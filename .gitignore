@@ -2,4 +2,4 @@ __pycache__/
 *.png
 *.log
 .env
-.json
+configuration.json
