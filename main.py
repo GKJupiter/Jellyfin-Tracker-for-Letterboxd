@@ -1,28 +1,34 @@
 import uvicorn
 import urllib.parse
 import asyncio
-import os
+import json
 from fastapi import FastAPI, Request
 from playwright.async_api import async_playwright
-from dotenv import load_dotenv
-
-# Load variables from .env file
-load_dotenv()
 
 app = FastAPI()
 
-# --- CONFIGURATION FROM .ENV ---
-WATCH_THRESHOLD = int(os.getenv("WATCH_THRESHOLD", 85))
-LETTERBOXD_USER = os.getenv("LB_USER")
-LETTERBOXD_PASS = os.getenv("LB_PASS")
+# ==========================================
+# CONFIGURATION
+# ==========================================
+WATCH_THRESHOLD = 85  # Change this number here to adjust sensitivity
+# ==========================================
 
-# Global lock to prevent multiple browsers running at once
+# Global lock: Only one browser session at a time
 browser_lock = asyncio.Lock()
 handled_movies = set()
 
-async def mark_on_letterboxd(movie_name, movie_year):
-    async with browser_lock:  # Only one browser task can run at a time
-        print(f"🎬 [Browser] Starting task for: {movie_name} ({movie_year})")
+def load_user_map():
+    """Reads the users.json file to get credentials."""
+    try:
+        with open("users.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print("❌ ERROR: users.json not found! Please create it.")
+        return {}
+
+async def mark_on_letterboxd(movie_name, movie_year, lb_user, lb_pass):
+    async with browser_lock:
+        print(f"🎬 [Browser] Logging in as {lb_user} for: {movie_name}")
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, slow_mo=100)
@@ -34,7 +40,6 @@ async def mark_on_letterboxd(movie_name, movie_year):
 
             try:
                 # 1. LOGIN
-                print("⏳ Login Phase...")
                 await page.goto("https://letterboxd.com/sign-in/", wait_until="domcontentloaded")
                 
                 try:
@@ -44,12 +49,12 @@ async def mark_on_letterboxd(movie_name, movie_year):
                     pass
 
                 await page.wait_for_selector("input[name='username']")
-                await page.fill("input[name='username']", LETTERBOXD_USER)
-                await page.fill("input[name='password']", LETTERBOXD_PASS)
+                await page.fill("input[name='username']", lb_user)
+                await page.fill("input[name='password']", lb_pass)
                 await page.keyboard.press("Enter")
                 
                 await page.wait_for_url("https://letterboxd.com/", wait_until="domcontentloaded", timeout=15000)
-                print("✅ Login Successful!")
+                print(f"✅ Login Successful for {lb_user}!")
 
                 # 2. SEARCH
                 search_query = f"{movie_name} {movie_year}" if movie_year else movie_name
@@ -64,23 +69,22 @@ async def mark_on_letterboxd(movie_name, movie_year):
 
                 results = page.locator(".results li .film-poster")
                 if await results.count() == 0:
-                    print(f"❌ ERROR: No results for {movie_name}")
+                    print(f"❌ ERROR: No results for '{movie_name}'")
                     return
 
                 await results.first.click()
                 
                 # 3. MARK WATCHED
-                print("👀 Looking for 'Watch' button...")
                 await page.wait_for_selector(".sidebar", state="visible", timeout=10000)
-                
                 watch_btn = page.locator(".action-watched")
+                
                 if await watch_btn.count() > 0:
                     class_text = await watch_btn.get_attribute("class")
                     if " -on" in class_text:
                         print("✅ ALREADY watched.")
                     else:
                         await watch_btn.click()
-                        print("✅ SUCCESS: Marked via Icon!")
+                        print("✅ SUCCESS: Marked Watched!")
                         await asyncio.sleep(2)
                 else:
                     try:
@@ -99,20 +103,32 @@ async def receive_jellyfin_data(request: Request):
     try:
         data = await request.json()
         item_name = data.get("Name")
-        production_year = data.get("Year")
-        user_name = data.get("NotificationUsername")
+        production_year = data.get("ProductionYear")
+        jellyfin_user = data.get("NotificationUsername")
         current_ticks = data.get("PlaybackPositionTicks", 0)
         total_ticks = data.get("RunTimeTicks", 1) 
         
-        session_id = f"{user_name}_{item_name}"
+        session_id = f"{jellyfin_user}_{item_name}"
         percent = (current_ticks / total_ticks) * 100 if total_ticks > 0 else 0
 
         if percent >= WATCH_THRESHOLD:
             if session_id not in handled_movies:
-                print(f"🚀 TARGET REACHED: {item_name} ({percent:.1f}%)")
-                handled_movies.add(session_id)
-                # Run the browser task in the background
-                asyncio.create_task(mark_on_letterboxd(item_name, production_year))
+                user_map = load_user_map()
+                
+                if jellyfin_user in user_map:
+                    print(f"🚀 TARGET REACHED: {item_name} (User: {jellyfin_user})")
+                    creds = user_map[jellyfin_user]
+                    handled_movies.add(session_id)
+                    asyncio.create_task(mark_on_letterboxd(
+                        item_name, 
+                        production_year, 
+                        creds["lb_user"], 
+                        creds["lb_pass"]
+                    ))
+                else:
+                    if session_id not in handled_movies:
+                         print(f"⚠️ Unmapped user: {jellyfin_user}")
+                         handled_movies.add(session_id)
         
         elif percent < 5:
             if session_id in handled_movies:
@@ -120,8 +136,9 @@ async def receive_jellyfin_data(request: Request):
 
         return {"status": "ok"}
     except Exception as e:
+        print(f"Webhook Error: {e}")
         return {"status": "error"}
 
 if __name__ == "__main__":
-    print(f"Tracker Active. Threshold: {WATCH_THRESHOLD}%")
+    print(f"Tracker Active. Multi-User Mode. Threshold: {WATCH_THRESHOLD}%")
     uvicorn.run(app, host="0.0.0.0", port=5000)

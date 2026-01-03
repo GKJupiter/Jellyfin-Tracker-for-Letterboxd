@@ -1,0 +1,10 @@
+{
+    "JellyfinUser1": {
+        "lb_user": "LetterboxdUserA",
+        "lb_pass": "PasswordA"
+    },
+    "JellyfinUser2": {
+        "lb_user": "LetterboxdUserB",
+        "lb_pass": "PasswordB"
+    }
+}
